@@ -2,7 +2,7 @@ import java.util.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-public class LibraryManagementSystem {
+public class Main {
     public static void main(String[] args) {
         LibrarySystem lib = new LibrarySystem();
         if (lib.login()) {
@@ -16,21 +16,28 @@ public class LibraryManagementSystem {
 class Person {
     protected String id;
     protected String name;
+
     public Person(String id, String name) {
         this.id = id;
         this.name = name;
     }
+
+
+    public String getId() { return id; }
+    public String getName() { return name; }
 }
 
 class User extends Person {
     private String password;
     private String role;
     private ArrayList<String> borrowedBooks = new ArrayList<>();
+
     public User(String id, String name, String password, String role) {
         super(id, name);
         this.password = password;
         this.role = role;
     }
+
     public String getPassword() { return password; }
     public String getRole() { return role; }
     public boolean isAdmin() { return role.equalsIgnoreCase("admin"); }
@@ -43,13 +50,19 @@ class User extends Person {
 class Book {
     private String bookId, title, author;
     private boolean available;
+
     public Book(String bookId, String title, String author, boolean available) {
-        this.bookId = bookId; this.title = title; this.author = author; this.available = available;
+        this.bookId = bookId; 
+        this.title = title; 
+        this.author = author; 
+        this.available = available;
     }
+
     public void displayBookDetails() {
         String status = available ? "Available" : "Borrowed";
         System.out.printf("%-8s %-25s %-20s %-10s%n", bookId, title, author, status);
     }
+
     public String getBookId() { return bookId; }
     public boolean isAvailable() { return available; }
     public void setAvailable(boolean available) { this.available = available; }
@@ -57,13 +70,20 @@ class Book {
 
 class Transaction {
     private String transactionId, userId, bookId, dateBorrowed, dateReturned;
+
     public Transaction(String tid, String uid, String bid, String db, String dr) {
-        transactionId = tid; userId = uid; bookId = bid; dateBorrowed = db; dateReturned = dr;
+        transactionId = tid; 
+        userId = uid; 
+        bookId = bid; 
+        dateBorrowed = db; 
+        dateReturned = dr;
     }
+
     public void setDateReturned(String dr) { dateReturned = dr; }
     public String getBookId() { return bookId; }
     public String getUserId() { return userId; }
     public String getDateReturned() { return dateReturned; }
+
     public void displayTransaction() {
         String returned = dateReturned.equals("null") ? "Not Returned" : dateReturned;
         System.out.printf("%-8s %-8s %-8s %-15s %-15s%n",
@@ -91,6 +111,7 @@ class LibrarySystem {
         String name = sc.nextLine();
         System.out.print("Password: ");
         String pass = sc.nextLine();
+
         for (User u : users) {
             if (u.getName().equalsIgnoreCase(name) && u.getPassword().equals(pass)) {
                 loggedInUser = u;
@@ -98,6 +119,7 @@ class LibrarySystem {
                 return true;
             }
         }
+
         System.out.println("Login failed.");
         return false;
     }
@@ -109,13 +131,14 @@ class LibrarySystem {
             System.out.println("0. Exit");
             System.out.print("Choice: ");
             String ch = sc.nextLine();
+
             switch (ch) {
                 case "1": viewBooks(); break;
                 case "2": borrowBook(); break;
                 case "3": returnBook(); break;
                 case "4": if (loggedInUser.isAdmin()) viewTransactions(); break;
                 case "0": return;
-                default: System.out.println("Invalid."); 
+                default: System.out.println("Invalid choice."); 
             }
         }
     }
@@ -128,6 +151,7 @@ class LibrarySystem {
     private void borrowBook() {
         System.out.print("Enter Book ID: ");
         String id = sc.nextLine();
+
         for (Book b : books) {
             if (b.getBookId().equalsIgnoreCase(id)) {
                 if (!b.isAvailable()) { System.out.println("Already borrowed."); return; }
@@ -139,12 +163,14 @@ class LibrarySystem {
                 return;
             }
         }
+
         System.out.println("Book not found.");
     }
 
     private void returnBook() {
         System.out.print("Enter Book ID to return: ");
         String id = sc.nextLine();
+
         for (Book b : books) {
             if (b.getBookId().equalsIgnoreCase(id)) {
                 b.setAvailable(true);
@@ -157,6 +183,7 @@ class LibrarySystem {
                 return;
             }
         }
+
         System.out.println("Book not found.");
     }
 
@@ -168,4 +195,4 @@ class LibrarySystem {
     private String today() {
         return LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
-                }
+    }
