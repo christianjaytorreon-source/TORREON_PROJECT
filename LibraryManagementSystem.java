@@ -2,197 +2,125 @@ import java.util.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-public class Main {
+public class LibraryManagementSystem {
     public static void main(String[] args) {
         LibrarySystem lib = new LibrarySystem();
-        if (lib.login()) {
-            lib.showMenu();
-        } else {
-            System.out.println("Login failed. Exiting system...");
-        }
+        if (lib.login()) lib.menu();
+        else System.out.println("Login failed. Exiting...");
     }
 }
 
 class Person {
-    protected String id;
-    protected String name;
-
-    public Person(String id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-
-
-    public String getId() { return id; }
-    public String getName() { return name; }
+    protected String id, name;
+    public Person(String id, String name) { this.id = id; this.name = name; }
+    public String getId(){return id;} public String getName(){return name;}
+    public void displayInfo(){ System.out.println(id + " - " + name); }
 }
 
 class User extends Person {
-    private String password;
-    private String role;
-    private ArrayList<String> borrowedBooks = new ArrayList<>();
-
-    public User(String id, String name, String password, String role) {
-        super(id, name);
-        this.password = password;
-        this.role = role;
-    }
-
-    public String getPassword() { return password; }
-    public String getRole() { return role; }
-    public boolean isAdmin() { return role.equalsIgnoreCase("admin"); }
-    public ArrayList<String> getBorrowedBooks() { return borrowedBooks; }
-    public boolean canBorrowMore() { return borrowedBooks.size() < 3; }
-    public void addBorrowedBook(String bookId) { borrowedBooks.add(bookId); }
-    public void removeBorrowedBook(String bookId) { borrowedBooks.remove(bookId); }
+    private String pass, role;
+    private ArrayList<String> borrowed = new ArrayList<>();
+    public User(String id,String n,String p,String r){ super(id,n); pass=p; role=r; }
+    public String getPass(){return pass;} public String getRole(){return role;}
+    public boolean isAdmin(){return role.equalsIgnoreCase("admin");}
+    public boolean canBorrow(){return borrowed.size()<3;}
+    public void addBook(String id){ borrowed.add(id); }
+    public void remBook(String id){ borrowed.remove(id); }
 }
 
 class Book {
-    private String bookId, title, author;
-    private boolean available;
-
-    public Book(String bookId, String title, String author, boolean available) {
-        this.bookId = bookId; 
-        this.title = title; 
-        this.author = author; 
-        this.available = available;
-    }
-
-    public void displayBookDetails() {
-        String status = available ? "Available" : "Borrowed";
-        System.out.printf("%-8s %-25s %-20s %-10s%n", bookId, title, author, status);
-    }
-
-    public String getBookId() { return bookId; }
-    public boolean isAvailable() { return available; }
-    public void setAvailable(boolean available) { this.available = available; }
+    private String id,title,author; boolean avail;
+    public Book(String i,String t,String a,boolean v){ id=i;title=t;author=a;avail=v; }
+    public String getId(){return id;} public boolean isAvail(){return avail;}
+    public void setAvail(boolean v){avail=v;}
+    public void show(){System.out.printf("%-6s %-25s %-20s %-10s%n",id,title,author,(avail?"Available":"Borrowed"));}
 }
 
-class Transaction {
-    private String transactionId, userId, bookId, dateBorrowed, dateReturned;
-
-    public Transaction(String tid, String uid, String bid, String db, String dr) {
-        transactionId = tid; 
-        userId = uid; 
-        bookId = bid; 
-        dateBorrowed = db; 
-        dateReturned = dr;
-    }
-
-    public void setDateReturned(String dr) { dateReturned = dr; }
-    public String getBookId() { return bookId; }
-    public String getUserId() { return userId; }
-    public String getDateReturned() { return dateReturned; }
-
-    public void displayTransaction() {
-        String returned = dateReturned.equals("null") ? "Not Returned" : dateReturned;
-        System.out.printf("%-8s %-8s %-8s %-15s %-15s%n",
-            transactionId, userId, bookId, dateBorrowed, returned);
-    }
+class Trans {
+    String tid,uid,bid,db,dr;
+    public Trans(String t,String u,String b,String db,String dr){this.tid=t;this.uid=u;this.bid=b;this.db=db;this.dr=dr;}
+    public void setReturn(String d){dr=d;}
+    public void show(){System.out.printf("%-5s %-5s %-5s %-12s %-12s%n",tid,uid,bid,db,dr.equals("null")?"Not Returned":dr);}
 }
 
 class LibrarySystem {
-    private ArrayList<User> users = new ArrayList<>();
-    private ArrayList<Book> books = new ArrayList<>();
-    private ArrayList<Transaction> transactions = new ArrayList<>();
-    private User loggedInUser;
-    private Scanner sc = new Scanner(System.in);
+    private ArrayList<User> users=new ArrayList<>();
+    private ArrayList<Book> books=new ArrayList<>();
+    private ArrayList<Trans> trans=new ArrayList<>();
+    private User current; private Scanner sc=new Scanner(System.in);
+    private DateTimeFormatter f=DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public LibrarySystem() {
-        users.add(new User("U001", "John", "123", "user"));
-        users.add(new User("A001", "Admin", "admin", "admin"));
-        books.add(new Book("B001", "1984", "George Orwell", true));
-        books.add(new Book("B002", "The Great Gatsby", "F. Scott Fitzgerald", true));
-        books.add(new Book("B003", "To Kill a Mockingbird", "Harper Lee", false));
+    public LibrarySystem(){
+        users.add(new User("A001","Admin","admin123","admin"));
+        users.add(new User("U001","John Doe","pass123","user"));
+        users.add(new User("U002","Jane Smith","abc123","user"));
+        books.add(new Book("B001","The Great Gatsby","F. Scott Fitzgerald",true));
+        books.add(new Book("B002","To Kill a Mockingbird","Harper Lee",true));
+        books.add(new Book("B003","1984","George Orwell",false));
     }
 
-    public boolean login() {
-        System.out.print("Username: ");
-        String name = sc.nextLine();
-        System.out.print("Password: ");
-        String pass = sc.nextLine();
-
-        for (User u : users) {
-            if (u.getName().equalsIgnoreCase(name) && u.getPassword().equals(pass)) {
-                loggedInUser = u;
-                System.out.println("Login successful! Welcome, " + name + "!");
-                return true;
-            }
+    public boolean login(){
+        System.out.println("Welcome to Library System\n--------------------------");
+        for(int i=3;i>0;i--){
+            System.out.print("Username: ");String n=sc.nextLine();
+            System.out.print("Password: ");String p=sc.nextLine();
+            for(User u:users)
+                if(u.getName().equalsIgnoreCase(n)&&u.getPass().equals(p)){
+                    current=u; System.out.println("Login successful!\n"); return true;
+                }
+            System.out.println("Invalid. Attempts left: "+(i-1));
         }
-
-        System.out.println("Login failed.");
         return false;
     }
 
-    public void showMenu() {
-        while (true) {
-            System.out.println("\n1. View Books\n2. Borrow Book\n3. Return Book");
-            if (loggedInUser.isAdmin()) System.out.println("4. View Transactions");
-            System.out.println("0. Exit");
-            System.out.print("Choice: ");
-            String ch = sc.nextLine();
-
-            switch (ch) {
-                case "1": viewBooks(); break;
-                case "2": borrowBook(); break;
-                case "3": returnBook(); break;
-                case "4": if (loggedInUser.isAdmin()) viewTransactions(); break;
-                case "0": return;
-                default: System.out.println("Invalid choice."); 
+    public void menu(){
+        while(true){
+            System.out.println("\n1.View Books\n2.Borrow\n3.Return");
+            if(current.isAdmin()) System.out.println("4.View Transactions");
+            System.out.println("0.Exit");
+            System.out.print("Choice: "); String c=sc.nextLine();
+            switch(c){
+                case"1":view();break;
+                case"2":borrow();break;
+                case"3":ret();break;
+                case"4":if(current.isAdmin())viewTrans();break;
+                case"0":System.out.println("Goodbye!");return;
+                default:System.out.println("Invalid");
             }
         }
     }
 
-    private void viewBooks() {
-        System.out.printf("%-8s %-25s %-20s %-10s%n", "ID", "Title", "Author", "Status");
-        for (Book b : books) b.displayBookDetails();
+    private void view(){
+        System.out.printf("%-6s %-25s %-20s %-10s%n","ID","Title","Author","Status");
+        for(Book b:books)b.show();
     }
 
-    private void borrowBook() {
-        System.out.print("Enter Book ID: ");
-        String id = sc.nextLine();
-
-        for (Book b : books) {
-            if (b.getBookId().equalsIgnoreCase(id)) {
-                if (!b.isAvailable()) { System.out.println("Already borrowed."); return; }
-                b.setAvailable(false);
-                loggedInUser.addBorrowedBook(id);
-                transactions.add(new Transaction("T" + (transactions.size()+1),
-                        loggedInUser.getId(), id, today(), "null"));
-                System.out.println("Book borrowed!");
-                return;
-            }
+    private void borrow(){
+        System.out.print("Book ID: ");String id=sc.nextLine();
+        for(Book b:books)if(b.getId().equalsIgnoreCase(id)){
+            if(!b.isAvail()){System.out.println("Already borrowed.");return;}
+            if(!current.canBorrow()){System.out.println("Limit reached (3).");return;}
+            b.setAvail(false); current.addBook(id);
+            String tid="T"+String.format("%03d",trans.size()+1);
+            trans.add(new Trans(tid,current.getId(),id,LocalDate.now().format(f),"null"));
+            System.out.println("Borrowed successfully!");return;
         }
-
         System.out.println("Book not found.");
     }
 
-    private void returnBook() {
-        System.out.print("Enter Book ID to return: ");
-        String id = sc.nextLine();
-
-        for (Book b : books) {
-            if (b.getBookId().equalsIgnoreCase(id)) {
-                b.setAvailable(true);
-                loggedInUser.removeBorrowedBook(id);
-                for (Transaction t : transactions)
-                    if (t.getBookId().equals(id) && t.getUserId().equals(loggedInUser.getId()) &&
-                        t.getDateReturned().equals("null"))
-                        t.setDateReturned(today());
-                System.out.println("Book returned!");
-                return;
-            }
+    private void ret(){
+        System.out.print("Book ID to return: ");String id=sc.nextLine();
+        for(Book b:books)if(b.getId().equalsIgnoreCase(id)){
+            b.setAvail(true); current.remBook(id);
+            for(Trans t:trans)if(t.uid.equals(current.getId())&&t.bid.equals(id)&&t.dr.equals("null"))
+                t.setReturn(LocalDate.now().format(f));
+            System.out.println("Returned successfully!");return;
         }
-
         System.out.println("Book not found.");
     }
 
-    private void viewTransactions() {
-        System.out.printf("%-8s %-8s %-8s %-15s %-15s%n", "T_ID", "User", "Book", "Borrowed", "Returned");
-        for (Transaction t : transactions) t.displayTransaction();
+    private void viewTrans(){
+        System.out.printf("%-5s %-5s %-5s %-12s %-12s%n","TID","User","Book","Borrowed","Returned");
+        for(Trans t:trans)t.show();
     }
-
-    private String today() {
-        return LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-    }
-    }
+}
