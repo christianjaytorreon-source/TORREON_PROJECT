@@ -9,5 +9,5 @@ LibraryManagementSystem.java
 ---
 
 Dle sya mo run dnhea sa github sir
-Using Programiz
+pero sa Programiz mo run
 [Programiz Java Online Compiler](https://www.programiz.com/java-programming/online-compiler)
