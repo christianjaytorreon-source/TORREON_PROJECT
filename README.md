@@ -1,10 +1,4 @@
-LibraryManagementSystem.java
-  - Main
-  - LibrarySystem
-  - Person
-  - User
-  - `Book`
-  - `Transaction`
+This project have a Library Management System where users can log in, borrow, and return book
 
 ---
 
